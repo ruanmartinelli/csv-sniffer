@@ -1,0 +1,22 @@
+{
+  "name": "csv-sniffer",
+  "version": "1.0.0",
+  "description": "listens for .csv attachments from an email account",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ruanmartinelli/csv-sniffer.git"
+  },
+  "author": "Ruan Martinelli",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ruanmartinelli/csv-sniffer/issues"
+  },
+  "homepage": "https://github.com/ruanmartinelli/csv-sniffer#readme",
+  "dependencies": {
+    "mail-listener2": "^0.2.0"
+  }
+}
