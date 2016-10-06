@@ -1,38 +1,68 @@
-const fs       = require('fs');
-const config   = require('./config.json');
+const _         = require('lodash');
+const fs        = require('fs');
+const uuid      = require('node-uuid');
+const chalk     = require('chalk');
+const config    = require('./config.json');
+
+const info      = chalk.bold.blue;
+const error     = chalk.bold.red;
+const success   = chalk.bold.green;
+const baseDir   = __dirname + '/attachments/'
+
 const MailListener = require("mail-listener2");
 
-
-var listener = new MailListener({
-  username: config.email,
-  password: config.password,
-  host: config.host,
-  port: 993,
-  tls: true,
-  connTimeout: 10000,
-  authTimeout: 5000,
-  // debug: console.log,
-  tlsOptions: { rejectUnauthorized: false },
-  markSeen: true, // all fetched email willbe marked as seen and not fetched next time
-  //fetchUnreadOnStart: true, // use it only if you want to get all unread email on lib start. Default is `false`,
-  // mailParserOptions: {streamAttachments: true}, // options to be passed to mailParser lib.
+const listener = new MailListener({
+    username:config.email,
+    password:config.password,
+    host: config.host,
+    port: 993,
+    tls: true,
+    tlsOptions: { rejectUnauthorized: false },
+    markSeen: true
 });
 
-listener.start(); // start listening
+listener.on("server:connected",     ()    => console.log(success("Connected")));
+listener.on("server:disconnected",  ()    => console.log(error("Disconnected")));
+listener.on("error",                (err) => console.log(err));
 
-listener.on("server:connected", () => console.log("imapConnected"));
-
-listener.on("server:disconnected", () => console.log("imapDisconnected"));
-
-listener.on("error", (err) => console.log(err));
-
+// Handles new messages
 listener.on("mail", (mail, seqno, attributes) => {
-  // do something with mail object including attachments
-  console.log(mail.attachments.length + " attachments");
-  console.log(mail.from.length + " from");
-  console.log(mail.date);
+    console.log(info("You have 1 new message"));
+    console.log("FROM   : " + _.map(mail.from, (addr) => console.log("\n" + addr)));
+    console.log("TO     : " + _.map(mail.to, (addr) => console.log("\n" + addr)));
+    console.log("SUBJECT: " + mail.subject);
+    console.log("DATE   : " + mail.date);
+    console.log("RECDATE: " + mail.receiveDate);
+    console.log(info("Checking attachments..."));
+
+    if(mail.attachments && mail.attachments.length > 0){
+        const csvAttachments = mail.attachments.filter(isCSV);
+
+        console.log(mail.attachments.length + " attachments found");
+        console.log(csvAttachments.length + " of those are .csv files");
+        console.log(info("Saving attachments..."));
+
+        _.forEach(csvAttachments, saveFromAttachment);
+    }else{
+        console.log(info("No attachment found :("));
+    }
+
 });
 
-listener.on("attachment", function(attachment){
-  // console.log(attachment);
-});
+listener.start();
+
+
+function isCSV(attachment){
+    return attachment.contentType && attachment.contentType === 'text/csv';
+}
+
+function saveFromAttachment(attachment){
+    let filename = baseDir + _.toString(new Date()) + " " + uuid.v1() + " - " + attachment.fileName;
+    let wstream = fs.createWriteStream(filename);
+
+    wstream.on('error',  (err) => console.log (error(err)));
+    wstream.on('finish', () => console.log    (success("File " + filename + " saved successfuly")));
+
+    wstream.write(attachment.content);
+    wstream.end();
+}
