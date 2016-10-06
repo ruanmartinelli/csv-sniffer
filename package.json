@@ -4,7 +4,8 @@
   "description": "listens for .csv attachments from an email account",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "forever": "node forever.js",
+    "listener": "node index.js"
   },
   "repository": {
     "type": "git",
