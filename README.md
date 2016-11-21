@@ -1,3 +1,3 @@
 # csv-sniffer
 
-listens for .csv attachments from an email account
+listens for .csv attachments of an email account
